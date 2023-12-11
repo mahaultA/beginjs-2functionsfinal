@@ -1,6 +1,16 @@
 import { prompt } from "./prompt.js";
 
-// Validate the user's input
+//------------------------------------------------------------
+// CHAINES DE CARACTERES GLOBALES
+//------------------------------------------------------------
+const charactersLowCase = "abcdefghijklmnopqrstuvwxyz";
+const charactersUpCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const charactersNumbers = "0123456789";
+const charactersSpecials = "@_/+";
+
+//------------------------------------------------------------
+// VALIDATION DES SAISIES UTILISATEUR
+//------------------------------------------------------------
 const isValidNumber = (number) => {
   return !Number.isNaN(number) && number >= 8 && number <= 36;
 };
@@ -17,18 +27,17 @@ const isValidYesOrNo = (choice) => {
 };
 
 const convertYesOrNoToBoolean = (character) => {
-  console.log({ character });
   if (character.toUpperCase() === "Y") {
-    console.log("Je suis OUIII"); //TODO à supprimer
     return true;
-  } else if (character.toUpperCase() === "N") {
-    console.log("Je suis NOOONN"); //TODO à supprimer
+  } else {
+    //(character.toUpperCase() === "N")
     return false;
   }
-  console.log("Pourquoi je suis là?"); //TODO à supprimer
-  return false; //TODO : A supprimer pour gerer cas d'erreur
 };
 
+//------------------------------------------------------------
+// DEMANDE DE SAISIE UTILISATEUR
+//------------------------------------------------------------
 const askNbCharacters = () => {
   const nbCharacters = Number(prompt("-> Combien de caracteres ? (8-36) "));
   if (!isValidNumber(nbCharacters)) {
@@ -67,17 +76,101 @@ const askUpperCase = () => {
   return convertYesOrNoToBoolean(upperCase);
 };
 
-function getRandomInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max + 1 - min) + min);
+//------------------------------------------------------------
+// GENERATION D'UNE STRING RANDOM A PARTIR D'UNE LISTE
+// DE CARACTERES AUTORISES (characters)
+//------------------------------------------------------------
+const generateString = (length, characters) => {
+  let result = "";
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+};
+
+//------------------------------------------------------------
+// VALIDATION DE LA CHAINE DE CARACTERES SELON LES
+// PARAMETRES RENTRES PAR L'UTILISATEUR
+//------------------------------------------------------------
+const hasNumber = (myString) => {
+  return /\d/.test(myString);
+};
+
+const checkPasswordValidFromUserSettings = (
+  password,
+  specialCharAsked,
+  numberAsked,
+  upperCaseAsked
+) => {
+  // Créer une expression régulière basée sur les caractères autorisés
+  const regexSpecialChar = new RegExp(`[${charactersSpecials}]`);
+  // Vérifier si la chaîne générée contient au moins un des caractères autorisés
+  const containsSpecialChar = regexSpecialChar.test(password);
+  if (specialCharAsked && !containsSpecialChar) {
+    console.log("PROBLEME : Pas de caractere special");
+    return false;
+  }
+
+  if (numberAsked && !hasNumber(password)) {
+    console.log("PROBLEME : Pas de nombres");
+    return false;
+  }
+
+  // Créer une expression régulière basée sur les caractères autorisés
+  const regexUpperCase = new RegExp(`[${charactersUpCase}]`);
+  // Vérifier si la chaîne générée contient au moins un des caractères autorisés
+  const containsUpperCase = regexUpperCase.test(password);
+  if (upperCaseAsked && !containsUpperCase) {
+    console.log("PROBLEME : Pas de majuscule");
+    return false;
+  }
+
+  return true;
+};
+
+//DEBUT DU PROGRAMME PRINCIPAL
+
+//DEMANDE DE TOUTES LES SAISIES UTILISATEUR
+const nbCharac = askNbCharacters();
+const specialCharacPresence = askSpecialCharacters();
+const numbersPresence = askNumbers();
+const upperCasePresence = askUpperCase();
+
+//CREATION DE LA CHAINE DES CARACTERES AUTORISES POUR lE PASSWORD
+let charactersAuthorized = charactersLowCase;
+
+if (specialCharacPresence) {
+  charactersAuthorized += charactersSpecials;
 }
 
-const nbCharac = askNbCharacters();
-console.log({ nbCharac });
-const specialCharacPresence = askSpecialCharacters();
-console.log({ specialCharacPresence });
-const numbersPresence = askNumbers();
-console.log({ numbersPresence });
-const upperCasePresence = askUpperCase();
-console.log({ upperCasePresence });
+if (numbersPresence) {
+  charactersAuthorized += charactersNumbers;
+}
+
+if (upperCasePresence) {
+  charactersAuthorized += charactersUpCase;
+}
+
+//GENERATION DU PASSWORD
+console.log("GENERATION DU PASSWORD EN COURS ...");
+let generatedPassword = "";
+let validityPassword = false;
+
+do {
+  generatedPassword = generateString(nbCharac, charactersAuthorized);
+  console.log({ generatedPassword });
+
+  //VERIFICATION DU PASSWORD
+  validityPassword = checkPasswordValidFromUserSettings(
+    generatedPassword,
+    specialCharacPresence,
+    numbersPresence,
+    upperCasePresence
+  );
+} while (!validityPassword);
+
+console.log("MOT DE PASSE:", generatedPassword);
+
+// const resultRandom = Math.random().toString(36).substring(0, nbCharac);
+// console.log({ resultRandom });
